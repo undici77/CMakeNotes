@@ -88,12 +88,21 @@ library, otherwise it will be static.
 
 ```
 	set(varName value... [PARENT_SCOPE])
-	set(varName value... CACHE <BOOL|FILEPATH|PATH|INTERNAL> "docstring" [FORCE])
+	set(varName value... CACHE <BOOL|FILEPATH|PATH|STRING|INTERNAL> "docstring" [FORCE])
 ```
-
 
 * The most basic way of defining a variable is with the set() command
 * The name of the variable, varName, can contain letters, numbers and underscores (_), with letters being **case-sensitive**.
+
+# set\_property
+
+```
+	set(trafficLight Green CACHE STRING "Status of something")
+	set_property(CACHE trafficLight PROPERTY STRINGS Red Orange Green)
+```
+
+* `trafficLight`  cache  variable  will  initially  have  the  value `Green`. When  the  user
+attempts to modify trafficLight in cmake-gui, they will be given a combobox containing the three values `Red`, `Orange`, `Green`
 
 # unset
 
@@ -108,7 +117,162 @@ library, otherwise it will be static.
 ```
 	option(varName docstring [initialValue])
 ```
-* Equal to ``set(varName initialValue CACHE BOOL "docstring")`
+* Equal to `set(varName initialValue CACHE BOOL "docstring")`
 
 
+# mark\_as\_advanced
 
+```
+	mark_as_advanced([CLEAR|FORCE] var1 [var2...])
+```
+* The  `CLEAR`  keyword  ensures  the  variables  are  not  marked  as  advanced,  while  the  `FORCE`  keyword ensures  the  variables  are  marked  advanced.  Without  either  keyword,  the  variables  will  only  be marked as advanced if they don’t already have an advanced/non-advanced state set.
+
+# message
+
+```
+	message([STATUS|WARNING|SEND_ERROR|FATAL_ERROR|DEPRECATION] msg1 [msg2]...)
+```
+
+* Print out diagnostic messages and variable values during a CMake run.
+* **STATUS** Incidental information. Messages will normally be preceded by two hyphens.
+* **WARNING** usually  shown  highlighted  in  red  where  supported  (cmake  command  line console or the cmake-gui log area). Processing will continue.
+* **AUTHOR_WARNING** Like WARNING, but only shown if developer warnings are enabled (requires the -Wdev option on the cmake command line).
+* **SEND_ERROR** Indicates an error message which will be shown highlighted in red, where supported. Processing will continue until the configure stage completes, but generation will not be performed.
+* **FATAL_ERROR** Denotes a hard error. The message will be printed and processing will stop immediately. The log will also normally record the location of the fatal message() command.
+* **DEPRECATION** Special  category  used  to  log  a  deprecation  message.  If  the  `CMAKE_ERROR_DEPRECATED`  variable  is defined to a boolean true value, the message will be treated as an error. If `CMAKE_WARN_DEPRECATED` is  defined  to  a  boolean  true,  the  message  will  be  treated  as  a  warning.  If  neither  variable  is defined, the message will not be shown.
+
+# variable\_watch
+
+```
+	variable_watch(myVar [command])
+```
+
+* All attempts to read or modify it are logged.
+ 
+# string
+
+```
+	string(FIND inputString subString outVar [REVERSE])
+```
+
+* If `subString` does not appear in `inputString`, then `outVar` will be given the value -1.
+
+```
+	string(REPLACE matchString replaceWith outVar input [input...])
+```
+
+* Replacing a simple substring
+
+```
+	string(REGEX MATCH    regex outVar input [input...])
+	string(REGEX MATCHALL regex outVar input [input...])
+	string(REGEX REPLACE  regex replaceWith outVar input [input...])
+```
+
+* Regex full support
+
+```
+	string(SUBSTRING input index length outVar)
+```
+
+* Extracting a substring
+* If `length` is -1, the returned substring will contain all characters up to the end of the input string. 
+
+```
+	string(LENGTH  input outVar)
+	string(TOLOWER input outVar)
+	string(TOUPPER input outVar)
+	string(STRIP   input outVar)
+```
+
+# list
+
+```
+	list(LENGTH listVar outVar)
+	list(GET    listVar index [index...] outList)
+	list(APPEND listVar item [item...])
+	list(INSERT listVar index item [item...])
+	list(FIND myList value outIndex)
+	list(REMOVE_ITEM myList value [value...])
+	list(REMOVE_AT myList index [index...])
+	list(REMOVE_DUPLICATES myList)
+	list(REVERSE myList)
+	list(SORT myList)
+```
+
+* For all list operations which take an `index` as input, the `index` can be negative to indicate counting starts from the end of the list instead of the start. When used this way, the last item in the list has `index` -1, the second last has `index` -2 and so on.
+
+# math
+
+```
+	math(EXPR outVar mathExpr)
+```
+
+# if
+
+```
+	if(expression1)
+	    # commands ...
+	elseif(expression2)
+	    # commands ...
+	else()
+	    # commands ...
+	endif()
+```
+
+* If value is an unquoted constant with value 1, ON, YES, TRUE, Y or a non-zero number, it is treated as true. The test is case-insensitive.
+* If value is an unquoted constant with value 0, OFF, NO, FALSE, N, IGNORE, NOTFOUND, an empty string or a string that ends in -NOTFOUND, it is treated as false. Again, the test is case-insensitive.
+
+##### Logic operator
+```
+	# Logical operators
+	if(NOT expression)
+	if(expression1 AND expression2)
+	if(expression1 OR expression2)
+
+	# Example with parentheses
+	if(NOT (expression1 AND (expression2 OR expression3)))
+```
+
+| Numeric     | String         | Version numbers      |
+| ------------|----------------|----------------------|
+|LESS         |STRLESS         |VERSION_LESS          |
+|GREATER      |STRGREATER      |VERSION_GREATER       |
+|EQUAL        |STREQUAL        |VERSION_EQUAL         |
+|LESS_EQUAL   |STRLESS_EQUAL   |VERSION_LESS_EQUAL    |
+|GREATER_EQUAL|STRGREATER_EQUAL|VERSION_GREATER_EQUAL |
+
+```
+	# Valid numeric expressions, all evaluating as true
+	if(2 GREATER 1)
+	if("23" EQUAL 23)
+	set(val 42)
+	if(${val} EQUAL 42)
+	if("${val}" EQUAL 42)
+	
+	if(1.2   VERSION_EQUAL   1.2.0)
+	if(1.2   VERSION_LESS    1.2.3)
+	if(1.2.3 VERSION_GREATER 1.2  )
+	if(2.0.1 VERSION_GREATER 1.9.7)
+	if(1.8.2 VERSION_LESS    2    )	
+```
+
+##### Regex
+
+```
+	if(value MATCHES regex)
+```
+
+##### File System
+
+```
+	if(EXISTS pathToFileOrDir)
+	if(IS_DIRECTORY pathToDir)
+	if(IS_SYMLINK fileName)
+	if(IS_ABSOLUTE path)
+	if(file1 IS_NEWER_THAN file2)
+```
+
+* `IS_NEWER_THAN` returns true if either file is missing or if both files have the same timestamp. Thus, it would not  be  unusual  to  test  for  the  existence  of  `file1`  and  `file2`  before  performing  the  actual `IS_NEWER_THAN` test,  since  the  result  of  `IS_NEWER_THAN` 
+* Full paths should also be given when using `IS_NEWER_THAN`, since the behaviour for relative paths is not well defined.
+* None of the file system operators perform any variable/string substitution without `${}`, regardless of any quoting.
